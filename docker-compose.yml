@@ -1,0 +1,53 @@
+services:
+  duckdb:
+    image: duckdb-image
+    container_name: duckdb
+    build:
+      context: ./duckdb
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"  # Pour une éventuelle interface web
+    depends_on:
+      upstream_data:
+        condition: service_healthy
+    volumes:
+      - duckdb-data:/data
+      - tpch-data:/opt/tpch-data
+      - ./analytics:/app/analytics
+    env_file:
+        - .env
+    environment:
+      - UPS_HOST=upstream_data
+      - UPS_PORT=5432
+      - UPS_DATABASE=${POSTGRES_DB}
+      - UPS_USERNAME=${POSTGRES_USER}
+      - UPS_PASSWORD=${POSTGRES_PASSWORD}
+    command: ["bash", "-c", "tail -f /dev/null"]
+
+  upstream_data:
+    image: postgres:15
+    container_name: upstream_data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+      - ./postgres/load-tpch.sh:/docker-entrypoint-initdb.d/02-load-tpch.sh:ro
+      - postgres-data:/var/lib/postgresql/data
+      - tpch-data:/opt/tpch-data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tpchuser -d tpchdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  duckdb-data:
+  postgres-data:
+  tpch-data:
