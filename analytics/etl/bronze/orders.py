@@ -35,7 +35,7 @@ class OrdersBronzeETL(TableETL):
         )
 
     def extract_upstream(self) -> List[ETLDataSet]:
-        table_name = 'public.lineitem'
+        table_name = 'public.orders'
         relation = get_table_from_db(
             conn=self.conn,
             table_name=table_name,

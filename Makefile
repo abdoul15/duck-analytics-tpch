@@ -40,3 +40,19 @@ duckdb-python:
 # Exécuter une commande bash dans le conteneur DuckDB
 duckdb-bash:
 	docker exec -ti duckdb bash
+
+# Tests
+test:
+	docker exec -ti duckdb pytest analytics/tests
+
+# Exécuter les tests unitaires
+test-unit:
+	docker exec -ti duckdb pytest analytics/tests/unit
+
+# Exécuter les tests d'intégration
+test-integration:
+	docker exec -ti duckdb pytest analytics/tests/integration
+
+# Exécuter les tests avec couverture de code
+test-coverage:
+	docker exec -ti duckdb pytest analytics/tests --cov=analytics --cov-report=term-missing --cov-report=xml:coverage.xml

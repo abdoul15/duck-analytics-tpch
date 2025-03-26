@@ -14,7 +14,7 @@ class LineItemBronzeETL(TableETL):
         upstream_table_names: Optional[List[Type[TableETL]]] = None,
         name: str = 'lineitem',
         primary_keys: List[str] = ['l_orderkey', 'l_linenumber'],
-        storage_path: str = 's3://duckdb-bucket-tpch/iceberg/bronze/lineitem',
+        storage_path: str = 's3://duckdb-bucket-tpch/bronze/lineitem',
         data_format: str = 'parquet',
         database: str = 'tpchdb',
         partition_keys: List[str] = ['etl_inserted'],

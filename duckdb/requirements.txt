@@ -5,3 +5,8 @@ psycopg2-binary>=2.9.0
 python-dotenv>=1.0.0
 great-expectations[sqlalchemy]==0.18.21
 pyarrow
+
+# Testing dependencies
+pytest>=7.4.0
+pytest-mock>=3.11.1
+pytest-cov>=4.1.0
