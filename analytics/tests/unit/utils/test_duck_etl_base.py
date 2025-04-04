@@ -1,12 +1,13 @@
 import pytest
 from unittest.mock import patch, MagicMock, call
 import duckdb
-from analytics.utils.duck_etl_base import TableETL, InValidDataException
+# Import renamed base class
+from analytics.utils.duck_etl_base import Table, InValidDataException
 from analytics.utils.etl_dataset import ETLDataSet
 
 
-# Create a concrete implementation of the abstract TableETL class for testing
-class TestableTableETL(TableETL):
+# Rename class and update inheritance
+class TestableTable(Table):
     def __init__(
         self,
         conn,
@@ -66,11 +67,13 @@ class TestableTableETL(TableETL):
         )
 
 
-class TestTableETL:
+# Rename test class
+class TestTable:
     
     def test_initialization(self, mock_duckdb_connection):
-        """Test that TableETL is correctly initialized with all required attributes."""
-        etl = TestableTableETL(mock_duckdb_connection)
+        """Test that Table is correctly initialized with all required attributes."""
+        # Update instantiation
+        etl = TestableTable(mock_duckdb_connection)
         
         assert etl.conn == mock_duckdb_connection
         assert etl.name == "test_table"
@@ -85,7 +88,8 @@ class TestTableETL:
     
     def test_run_success(self, mock_duckdb_connection):
         """Test that run() correctly executes the ETL process when validation passes."""
-        etl = TestableTableETL(mock_duckdb_connection)
+        # Update instantiation
+        etl = TestableTable(mock_duckdb_connection)
         
         # Mock the validate method to return True
         with patch.object(etl, 'validate', return_value=True):
@@ -101,7 +105,8 @@ class TestTableETL:
     
     def test_run_validation_failure(self, mock_duckdb_connection):
         """Test that run() raises InValidDataException when validation fails."""
-        etl = TestableTableETL(mock_duckdb_connection)
+        # Update instantiation
+        etl = TestableTable(mock_duckdb_connection)
         
         # Mock the validate method to return False
         with patch.object(etl, 'validate', return_value=False):
@@ -118,7 +123,8 @@ class TestTableETL:
     
     def test_load(self, mock_duckdb_connection, mock_relation):
         """Test that load() correctly executes the COPY command."""
-        etl = TestableTableETL(mock_duckdb_connection)
+        # Update instantiation
+        etl = TestableTable(mock_duckdb_connection)
         
         # Create a dataset to load
         dataset = ETLDataSet(
@@ -151,7 +157,8 @@ class TestTableETL:
     
     def test_validate_no_expectations_file(self, mock_duckdb_connection, mock_relation):
         """Test that validate() returns True when no expectations file exists."""
-        etl = TestableTableETL(mock_duckdb_connection)
+        # Update instantiation
+        etl = TestableTable(mock_duckdb_connection)
         
         # Create a dataset to validate
         dataset = ETLDataSet(
@@ -172,7 +179,8 @@ class TestTableETL:
     @patch('great_expectations.get_context')
     def test_validate_with_expectations_success(self, mock_get_context, mock_duckdb_connection, mock_relation):
         """Test that validate() correctly uses Great Expectations when an expectations file exists."""
-        etl = TestableTableETL(mock_duckdb_connection)
+        # Update instantiation
+        etl = TestableTable(mock_duckdb_connection)
         
         # Create a dataset to validate
         dataset = ETLDataSet(

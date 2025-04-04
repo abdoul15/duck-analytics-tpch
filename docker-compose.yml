@@ -14,14 +14,16 @@ services:
       - duckdb-data:/data
       - tpch-data:/opt/tpch-data
       - ./analytics:/app/analytics
-    env_file:
-        - .env
     environment:
       - UPS_HOST=upstream_data
       - UPS_PORT=5432
       - UPS_DATABASE=${POSTGRES_DB}
       - UPS_USERNAME=${POSTGRES_USER}
       - UPS_PASSWORD=${POSTGRES_PASSWORD}
+      - AWS_REGION=${S3_REGION}
+      - AWS_ACCESS_KEY_ID=${S3_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${S3_SECRET_KEY}
+      - AWS_ENDPOINT_URL=${S3_ENDPOINT}
     command: ["bash", "-c", "tail -f /dev/null"]
 
   upstream_data:

@@ -1,6 +1,5 @@
 init-scripts:
 	chmod +x postgres/load-tpch.sh
-	chmod +x duckdb/entrypoint.sh
 
 build: init-scripts
 	docker compose build duckdb
@@ -23,7 +22,7 @@ duckdb-shell:
 
 # Exécuter le pipeline complet avec DuckDB
 run-pipeline:
-	docker exec -ti duckdb ./entrypoint.sh pipeline
+	docker exec -ti duckdb python /app/analytics/run_pipeline.py
 
 # Exécuter uniquement la couche Bronze avec DuckDB
 run-duckdb-bronze:

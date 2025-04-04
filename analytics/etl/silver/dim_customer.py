@@ -3,20 +3,20 @@ from typing import Dict, List, Optional, Type, Any
 
 import duckdb
 from analytics.utils.etl_dataset import ETLDataSet
-from analytics.utils.duck_etl_base import TableETL
-from analytics.etl.bronze.customer import CustomerBronzeETL
-from analytics.etl.bronze.nation import NationBronzeETL
-from analytics.etl.bronze.region import RegionBronzeETL
+from analytics.utils.duck_etl_base import Table
+from analytics.etl.bronze.customer import CustomerBronze
+from analytics.etl.bronze.nation import NationBronze
+from analytics.etl.bronze.region import RegionBronze
 
 
-class DimCustomerSilverETL(TableETL):
+class DimCustomerSilver(Table):
     def __init__(
         self,
         conn: duckdb.DuckDBPyConnection,
-        upstream_table_names: Optional[List[Type[TableETL]]] = [
-            CustomerBronzeETL,
-            NationBronzeETL,
-            RegionBronzeETL,
+        upstream_table_names: Optional[List[Type[Table]]] = [
+            CustomerBronze,
+            NationBronze,
+            RegionBronze,
         ],
         name: str = 'dim_customer',
         primary_keys: List[str] = ['customer_key'],
@@ -43,8 +43,8 @@ class DimCustomerSilverETL(TableETL):
     def extract_upstream(self) -> List[ETLDataSet]:
         upstream_etl_datasets = []
 
-        for TableETLClass in self.upstream_table_names:
-            etl_instance = TableETLClass(
+        for TableClass in self.upstream_table_names:
+            etl_instance = TableClass(
                 conn=self.conn,
                 run_upstream=self.run_upstream,
                 load_data=self.load_data,
@@ -61,7 +61,6 @@ class DimCustomerSilverETL(TableETL):
         nation_data = upstream_datasets[1].curr_data
         region_data = upstream_datasets[2].curr_data
 
-        # Register views
         customer_data.create_view("customer_temp", replace=True)
         nation_data.create_view("nation_temp", replace=True)
         region_data.create_view("region_temp", replace=True)
@@ -126,7 +125,6 @@ class DimCustomerSilverETL(TableETL):
             full_path = f"{base_path}/{partition_path}"
             relation = self.conn.read_parquet(f"{full_path}/*.parquet", hive_partitioning=True)
         else:
-            # Lire toutes les partitions
             full_path = f"{base_path}/*"
             all_data = self.conn.read_parquet(f"{full_path}/*.parquet", hive_partitioning=True)
             all_data.create_view("dim_customer_all", replace=True)

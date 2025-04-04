@@ -2,19 +2,19 @@ from datetime import date
 from typing import Dict, List, Optional, Type
 
 import duckdb
-from analytics.utils.etl_dataset import ETLDataSet 
-from analytics.utils.duck_etl_base import TableETL
-from analytics.etl.bronze.orders import OrdersBronzeETL
-from analytics.etl.bronze.lineitem import LineItemBronzeETL
+from analytics.utils.etl_dataset import ETLDataSet
+from analytics.utils.duck_etl_base import Table
+from analytics.etl.bronze.orders import OrdersBronze
+from analytics.etl.bronze.lineitem import LineItemBronze
 
 
-class FctOrdersSilverETL(TableETL):
+class FctOrdersSilver(Table):
     def __init__(
         self,
         conn: duckdb.DuckDBPyConnection,
-        upstream_table_names: Optional[List[Type[TableETL]]] = [
-            OrdersBronzeETL,
-            LineItemBronzeETL,
+        upstream_table_names: Optional[List[Type[Table]]] = [
+            OrdersBronze,
+            LineItemBronze,
         ],
         name: str = 'fct_orders',
         primary_keys: List[str] = ['order_key', 'line_number'],
@@ -40,8 +40,8 @@ class FctOrdersSilverETL(TableETL):
 
     def extract_upstream(self) -> List[ETLDataSet]:
         upstream_datasets = []
-        for TableETLClass in self.upstream_table_names:
-            etl_instance = TableETLClass(
+        for TableClass in self.upstream_table_names:
+            etl_instance = TableClass(
                 conn=self.conn,
                 run_upstream=self.run_upstream,
                 load_data=self.load_data,

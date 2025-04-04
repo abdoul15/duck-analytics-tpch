@@ -36,13 +36,8 @@ RUN pip install --upgrade pip && \
 # Création du répertoire pour les données
 RUN mkdir -p /data/iceberg
 
-# Copie des scripts
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
-
 # Définition des variables d'environnement
 ENV PYTHONPATH="/app:${PYTHONPATH}" \
     DUCKDB_DATA_DIR="/data"
 
-# Point d'entrée
-ENTRYPOINT ["./entrypoint.sh"]
+

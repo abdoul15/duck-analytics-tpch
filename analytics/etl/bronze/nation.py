@@ -2,16 +2,16 @@ from datetime import datetime
 from typing import Dict, List, Optional, Type
 
 import duckdb
-from analytics.utils.duck_etl_base import TableETL
+from analytics.utils.duck_etl_base import Table
 from analytics.utils.etl_dataset import ETLDataSet
 from analytics.utils.duck_database import get_table_from_db
 
 
-class NationBronzeETL(TableETL):
+class NationBronze(Table):
     def __init__(
         self,
         conn: duckdb.DuckDBPyConnection,
-        upstream_table_names: Optional[List[Type[TableETL]]] = None,
+        upstream_table_names: Optional[List[Type[Table]]] = None,
         name: str = 'nation',
         primary_keys: List[str] = ['n_nationkey'],
         storage_path: str = 's3://duckdb-bucket-tpch/bronze/nation',

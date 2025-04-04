@@ -2,21 +2,26 @@ import pytest
 from unittest.mock import patch, MagicMock, call
 import duckdb
 from datetime import datetime
-from analytics.etl.silver.dim_customer import DimCustomerSilverETL
-from analytics.etl.bronze.customer import CustomerBronzeETL
-from analytics.etl.bronze.nation import NationBronzeETL
-from analytics.etl.bronze.region import RegionBronzeETL
+# Import renamed class
+from analytics.etl.silver.dim_customer import DimCustomerSilver
+# Import renamed upstream classes
+from analytics.etl.bronze.customer import CustomerBronze
+from analytics.etl.bronze.nation import NationBronze
+from analytics.etl.bronze.region import RegionBronze
 from analytics.utils.etl_dataset import ETLDataSet
 
 
-class TestDimCustomerSilverETL:
+# Rename test class
+class TestDimCustomerSilver:
     
     def test_initialization(self, mock_duckdb_connection):
-        """Test that DimCustomerSilverETL is correctly initialized with default parameters."""
-        etl = DimCustomerSilverETL(conn=mock_duckdb_connection)
+        """Test that DimCustomerSilver is correctly initialized with default parameters."""
+        # Update instantiation
+        etl = DimCustomerSilver(conn=mock_duckdb_connection)
         
         assert etl.conn == mock_duckdb_connection
-        assert etl.upstream_table_names == [CustomerBronzeETL, NationBronzeETL, RegionBronzeETL]
+        # Update upstream class references
+        assert etl.upstream_table_names == [CustomerBronze, NationBronze, RegionBronze]
         assert etl.name == 'dim_customer'
         assert etl.primary_keys == ['customer_key']
         assert etl.storage_path == 's3://duckdb-bucket-tpch/silver/dim_customer'
@@ -27,8 +32,9 @@ class TestDimCustomerSilverETL:
         assert etl.load_data is True
     
     def test_initialization_with_custom_parameters(self, mock_duckdb_connection):
-        """Test that DimCustomerSilverETL is correctly initialized with custom parameters."""
-        etl = DimCustomerSilverETL(
+        """Test that DimCustomerSilver is correctly initialized with custom parameters."""
+        # Update instantiation
+        etl = DimCustomerSilver(
             conn=mock_duckdb_connection,
             upstream_table_names=['custom_upstream'],
             name='custom_dim_customer',
@@ -52,12 +58,13 @@ class TestDimCustomerSilverETL:
         assert etl.run_upstream is False
         assert etl.load_data is False
     
-    @patch.object(CustomerBronzeETL, 'run')
-    @patch.object(CustomerBronzeETL, 'read')
-    @patch.object(NationBronzeETL, 'run')
-    @patch.object(NationBronzeETL, 'read')
-    @patch.object(RegionBronzeETL, 'run')
-    @patch.object(RegionBronzeETL, 'read')
+    # Update patch decorators
+    @patch.object(CustomerBronze, 'run')
+    @patch.object(CustomerBronze, 'read')
+    @patch.object(NationBronze, 'run')
+    @patch.object(NationBronze, 'read')
+    @patch.object(RegionBronze, 'run')
+    @patch.object(RegionBronze, 'read')
     def test_extract_upstream_with_run_upstream(
         self, mock_region_read, mock_region_run, mock_nation_read, mock_nation_run, 
         mock_customer_read, mock_customer_run, mock_duckdb_connection, mock_relation
@@ -98,7 +105,8 @@ class TestDimCustomerSilverETL:
         mock_region_read.return_value = region_dataset
         
         # Create the ETL instance with run_upstream=True
-        etl = DimCustomerSilverETL(conn=mock_duckdb_connection, run_upstream=True)
+        # Update instantiation
+        etl = DimCustomerSilver(conn=mock_duckdb_connection, run_upstream=True)
         
         # Call extract_upstream
         result = etl.extract_upstream()
@@ -119,12 +127,13 @@ class TestDimCustomerSilverETL:
         assert result[1] == nation_dataset
         assert result[2] == region_dataset
     
-    @patch.object(CustomerBronzeETL, 'run')
-    @patch.object(CustomerBronzeETL, 'read')
-    @patch.object(NationBronzeETL, 'run')
-    @patch.object(NationBronzeETL, 'read')
-    @patch.object(RegionBronzeETL, 'run')
-    @patch.object(RegionBronzeETL, 'read')
+    # Update patch decorators
+    @patch.object(CustomerBronze, 'run')
+    @patch.object(CustomerBronze, 'read')
+    @patch.object(NationBronze, 'run')
+    @patch.object(NationBronze, 'read')
+    @patch.object(RegionBronze, 'run')
+    @patch.object(RegionBronze, 'read')
     def test_extract_upstream_without_run_upstream(
         self, mock_region_read, mock_region_run, mock_nation_read, mock_nation_run, 
         mock_customer_read, mock_customer_run, mock_duckdb_connection, mock_relation
@@ -165,7 +174,8 @@ class TestDimCustomerSilverETL:
         mock_region_read.return_value = region_dataset
         
         # Create the ETL instance with run_upstream=False
-        etl = DimCustomerSilverETL(conn=mock_duckdb_connection, run_upstream=False)
+        # Update instantiation
+        etl = DimCustomerSilver(conn=mock_duckdb_connection, run_upstream=False)
         
         # Call extract_upstream
         result = etl.extract_upstream()
@@ -189,7 +199,8 @@ class TestDimCustomerSilverETL:
     def test_transform_upstream(self, mock_duckdb_connection, mock_relation):
         """Test that transform_upstream correctly transforms the upstream data."""
         # Create the ETL instance
-        etl = DimCustomerSilverETL(conn=mock_duckdb_connection)
+        # Update instantiation
+        etl = DimCustomerSilver(conn=mock_duckdb_connection)
         
         # Create mock upstream datasets
         customer_dataset = ETLDataSet(
@@ -226,7 +237,7 @@ class TestDimCustomerSilverETL:
         transformed_relation = MagicMock(spec=duckdb.DuckDBPyRelation)
         mock_duckdb_connection.from_query.return_value = transformed_relation
         
-        # Directly patch the datetime in the DimCustomerSilverETL module
+        # Directly patch the datetime in the DimCustomerSilver module
         with patch('analytics.etl.silver.dim_customer.datetime') as mock_datetime:
             # Mock the datetime.now() to return a fixed timestamp
             mock_now = MagicMock()
@@ -265,7 +276,8 @@ class TestDimCustomerSilverETL:
     def test_read_with_in_memory_data(self, mock_duckdb_connection, mock_relation):
         """Test that read() returns the in-memory data when load_data=False and curr_data is not None."""
         # Create the ETL instance with load_data=False
-        etl = DimCustomerSilverETL(conn=mock_duckdb_connection, load_data=False)
+        # Update instantiation
+        etl = DimCustomerSilver(conn=mock_duckdb_connection, load_data=False)
         
         # Set curr_data to a mock relation
         etl.curr_data = mock_relation
@@ -286,7 +298,8 @@ class TestDimCustomerSilverETL:
     def test_read_all_partitions(self, mock_duckdb_connection):
         """Test that read() correctly reads all partitions when partition_values is None."""
         # Create the ETL instance
-        etl = DimCustomerSilverETL(conn=mock_duckdb_connection)
+        # Update instantiation
+        etl = DimCustomerSilver(conn=mock_duckdb_connection)
         
         # Mock the read_parquet method to return a relation
         all_partitions_relation = MagicMock(spec=duckdb.DuckDBPyRelation)
@@ -334,7 +347,8 @@ class TestDimCustomerSilverETL:
     def test_read_specific_partition(self, mock_duckdb_connection):
         """Test that read() correctly reads a specific partition when partition_values is provided."""
         # Create the ETL instance
-        etl = DimCustomerSilverETL(conn=mock_duckdb_connection)
+        # Update instantiation
+        etl = DimCustomerSilver(conn=mock_duckdb_connection)
         
         # Mock the read_parquet method to return a relation
         partition_relation = MagicMock(spec=duckdb.DuckDBPyRelation)

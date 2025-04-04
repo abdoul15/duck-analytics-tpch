@@ -2,17 +2,17 @@ from datetime import date
 from typing import Dict, List, Optional, Type
 
 import duckdb
-from analytics.utils.etl_dataset import ETLDataSet 
-from analytics.utils.duck_etl_base import TableETL
-from analytics.etl.gold.wide_order_details import WideOrderDetailsGoldETL
+from analytics.utils.etl_dataset import ETLDataSet
+from analytics.utils.duck_etl_base import Table
+from analytics.etl.gold.wide_order_details import WideOrderDetailsGold
 
 
-class MarketingMetricsGoldETL(TableETL):
+class MarketingMetricsGold(Table):
     def __init__(
         self,
         conn: duckdb.DuckDBPyConnection,
-        upstream_table_names: Optional[List[Type[TableETL]]] = [
-            WideOrderDetailsGoldETL
+        upstream_table_names: Optional[List[Type[Table]]] = [
+            WideOrderDetailsGold
         ],
         name: str = 'marketing_metrics',
         primary_keys: List[str] = ['month', 'market_segment'],
@@ -38,8 +38,8 @@ class MarketingMetricsGoldETL(TableETL):
 
     def extract_upstream(self) -> List[ETLDataSet]:
         datasets = []
-        for TableETLClass in self.upstream_table_names:
-            etl = TableETLClass(
+        for TableClass in self.upstream_table_names:
+            etl = TableClass(
                 conn=self.conn,
                 run_upstream=self.run_upstream,
                 load_data=self.load_data,

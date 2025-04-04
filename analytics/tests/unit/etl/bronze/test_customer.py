@@ -2,15 +2,18 @@ import pytest
 from unittest.mock import patch, MagicMock
 import duckdb
 from datetime import datetime
-from analytics.etl.bronze.customer import CustomerBronzeETL
+# Import renamed class
+from analytics.etl.bronze.customer import CustomerBronze
 from analytics.utils.etl_dataset import ETLDataSet
 
 
-class TestCustomerBronzeETL:
+# Rename test class
+class TestCustomerBronze:
     
     def test_initialization(self, mock_duckdb_connection):
-        """Test that CustomerBronzeETL is correctly initialized with default parameters."""
-        etl = CustomerBronzeETL(conn=mock_duckdb_connection)
+        """Test that CustomerBronze is correctly initialized with default parameters."""
+        # Update instantiation
+        etl = CustomerBronze(conn=mock_duckdb_connection)
         
         assert etl.conn == mock_duckdb_connection
         assert etl.name == 'customer'
@@ -23,8 +26,9 @@ class TestCustomerBronzeETL:
         assert etl.load_data is True
     
     def test_initialization_with_custom_parameters(self, mock_duckdb_connection):
-        """Test that CustomerBronzeETL is correctly initialized with custom parameters."""
-        etl = CustomerBronzeETL(
+        """Test that CustomerBronze is correctly initialized with custom parameters."""
+        # Update instantiation
+        etl = CustomerBronze(
             conn=mock_duckdb_connection,
             upstream_table_names=['some_upstream'],
             name='custom_customer',
@@ -51,7 +55,8 @@ class TestCustomerBronzeETL:
     def test_extract_upstream(self, mock_duckdb_connection, mock_relation):
         """Test that extract_upstream correctly extracts data from the upstream source."""
         # Create the ETL instance
-        etl = CustomerBronzeETL(conn=mock_duckdb_connection)
+        # Update instantiation
+        etl = CustomerBronze(conn=mock_duckdb_connection)
         
         # Mock the get_table_from_db function directly on the instance
         with patch('analytics.etl.bronze.customer.get_table_from_db', return_value=mock_relation) as mock_get_table:
@@ -78,7 +83,8 @@ class TestCustomerBronzeETL:
     def test_transform_upstream(self, mock_duckdb_connection, mock_relation):
         """Test that transform_upstream correctly transforms the upstream data."""
         # Create the ETL instance
-        etl = CustomerBronzeETL(conn=mock_duckdb_connection)
+        # Update instantiation
+        etl = CustomerBronze(conn=mock_duckdb_connection)
         
         # Create a mock upstream dataset
         upstream_dataset = ETLDataSet(
@@ -95,7 +101,7 @@ class TestCustomerBronzeETL:
         transformed_relation = MagicMock(spec=duckdb.DuckDBPyRelation)
         mock_duckdb_connection.from_query.return_value = transformed_relation
         
-        # Directly patch the datetime in the CustomerBronzeETL module
+        # Directly patch the datetime in the CustomerBronze module
         with patch('analytics.etl.bronze.customer.datetime') as mock_datetime:
             # Mock the datetime.now() to return a fixed timestamp
             mock_now = MagicMock()
@@ -128,7 +134,8 @@ class TestCustomerBronzeETL:
     def test_read_with_in_memory_data(self, mock_duckdb_connection, mock_relation):
         """Test that read() returns the in-memory data when load_data=False and curr_data is not None."""
         # Create the ETL instance with load_data=False
-        etl = CustomerBronzeETL(conn=mock_duckdb_connection, load_data=False)
+        # Update instantiation
+        etl = CustomerBronze(conn=mock_duckdb_connection, load_data=False)
         
         # Set curr_data to a mock relation
         etl.curr_data = mock_relation
@@ -149,7 +156,8 @@ class TestCustomerBronzeETL:
     def test_read_all_partitions(self, mock_duckdb_connection):
         """Test that read() correctly reads all partitions when partition_values is None."""
         # Create the ETL instance
-        etl = CustomerBronzeETL(conn=mock_duckdb_connection)
+        # Update instantiation
+        etl = CustomerBronze(conn=mock_duckdb_connection)
         
         # Mock the read_parquet method to return a relation
         all_partitions_relation = MagicMock(spec=duckdb.DuckDBPyRelation)
@@ -197,7 +205,8 @@ class TestCustomerBronzeETL:
     def test_read_specific_partition(self, mock_duckdb_connection):
         """Test that read() correctly reads a specific partition when partition_values is provided."""
         # Create the ETL instance
-        etl = CustomerBronzeETL(conn=mock_duckdb_connection)
+        # Update instantiation
+        etl = CustomerBronze(conn=mock_duckdb_connection)
         
         # Mock the read_parquet method to return a relation
         partition_relation = MagicMock(spec=duckdb.DuckDBPyRelation)

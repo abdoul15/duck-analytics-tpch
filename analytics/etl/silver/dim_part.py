@@ -2,25 +2,25 @@ from datetime import datetime
 from typing import Dict, List, Optional, Type
 
 import duckdb
-from analytics.utils.etl_dataset import ETLDataSet 
-from analytics.utils.duck_etl_base import TableETL
-from analytics.etl.bronze.part import PartBronzeETL
-from analytics.etl.bronze.partsupp import PartSuppBronzeETL
-from analytics.etl.bronze.supplier import SupplierBronzeETL
-from analytics.etl.bronze.nation import NationBronzeETL
-from analytics.etl.bronze.region import RegionBronzeETL
+from analytics.utils.etl_dataset import ETLDataSet
+from analytics.utils.duck_etl_base import Table
+from analytics.etl.bronze.part import PartBronze
+from analytics.etl.bronze.partsupp import PartSuppBronze
+from analytics.etl.bronze.supplier import SupplierBronze
+from analytics.etl.bronze.nation import NationBronze
+from analytics.etl.bronze.region import RegionBronze
 
 
-class DimPartSilverETL(TableETL):
+class DimPartSilver(Table):
     def __init__(
         self,
         conn: duckdb.DuckDBPyConnection,
-        upstream_table_names: Optional[List[Type[TableETL]]] = [
-            PartBronzeETL,
-            PartSuppBronzeETL,
-            SupplierBronzeETL,
-            NationBronzeETL,
-            RegionBronzeETL,
+        upstream_table_names: Optional[List[Type[Table]]] = [
+            PartBronze,
+            PartSuppBronze,
+            SupplierBronze,
+            NationBronze,
+            RegionBronze,
         ],
         name: str = 'dim_part',
         primary_keys: List[str] = ['part_key'],
@@ -46,8 +46,8 @@ class DimPartSilverETL(TableETL):
 
     def extract_upstream(self) -> List[ETLDataSet]:
         upstream_datasets = []
-        for TableETLClass in self.upstream_table_names:
-            etl_instance = TableETLClass(
+        for TableClass in self.upstream_table_names:
+            etl_instance = TableClass(
                 conn=self.conn,
                 run_upstream=self.run_upstream,
                 load_data=self.load_data,
@@ -64,7 +64,6 @@ class DimPartSilverETL(TableETL):
         nation = upstream_datasets[3].curr_data
         region = upstream_datasets[4].curr_data
 
-        # Register all upstream datasets as views
         part.create_view("part", replace=True)
         partsupp.create_view("partsupp", replace=True)
         supplier.create_view("supplier", replace=True)

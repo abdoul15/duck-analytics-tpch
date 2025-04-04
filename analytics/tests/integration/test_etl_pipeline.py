@@ -2,14 +2,17 @@ import pytest
 from unittest.mock import patch, MagicMock
 import duckdb
 import os
-from analytics.etl.bronze.customer import CustomerBronzeETL
-from analytics.etl.bronze.nation import NationBronzeETL
-from analytics.etl.bronze.region import RegionBronzeETL
-from analytics.etl.silver.dim_customer import DimCustomerSilverETL
+# Import renamed Bronze classes
+from analytics.etl.bronze.customer import CustomerBronze
+from analytics.etl.bronze.nation import NationBronze
+from analytics.etl.bronze.region import RegionBronze
+# Import renamed Silver class
+from analytics.etl.silver.dim_customer import DimCustomerSilver
 from analytics.utils.etl_dataset import ETLDataSet
 
 
-class TestETLPipeline:
+# Rename test class
+class TestPipeline:
     
     @pytest.fixture
     def setup_test_tables(self, mock_duckdb_connection):
@@ -71,15 +74,18 @@ class TestETLPipeline:
         mock_get_table.side_effect = mock_get_table_impl
         
         # Create and run the bronze ETL classes with load_data=False to avoid actual S3 writes
-        customer_etl = CustomerBronzeETL(conn=mock_duckdb_connection, load_data=False)
+        # Update instantiation
+        customer_etl = CustomerBronze(conn=mock_duckdb_connection, load_data=False)
         customer_etl.run()
         customer_dataset = customer_etl.read()
         
-        nation_etl = NationBronzeETL(conn=mock_duckdb_connection, load_data=False)
+        # Update instantiation
+        nation_etl = NationBronze(conn=mock_duckdb_connection, load_data=False)
         nation_etl.run()
         nation_dataset = nation_etl.read()
         
-        region_etl = RegionBronzeETL(conn=mock_duckdb_connection, load_data=False)
+        # Update instantiation
+        region_etl = RegionBronze(conn=mock_duckdb_connection, load_data=False)
         region_etl.run()
         region_dataset = region_etl.read()
         
@@ -90,8 +96,10 @@ class TestETLPipeline:
         
         # Create and run the silver ETL class with run_upstream=False and load_data=False
         # We'll patch the extract_upstream method to use our already-run bronze ETLs
-        with patch.object(DimCustomerSilverETL, 'extract_upstream', return_value=[customer_dataset, nation_dataset, region_dataset]):
-            dim_customer_etl = DimCustomerSilverETL(conn=mock_duckdb_connection, run_upstream=False, load_data=False)
+        # Update patch target
+        with patch.object(DimCustomerSilver, 'extract_upstream', return_value=[customer_dataset, nation_dataset, region_dataset]):
+            # Update instantiation
+            dim_customer_etl = DimCustomerSilver(conn=mock_duckdb_connection, run_upstream=False, load_data=False)
             dim_customer_etl.run()
             dim_customer_dataset = dim_customer_etl.read()
             
@@ -147,7 +155,8 @@ class TestETLPipeline:
         
         # Create and run the silver ETL class with run_upstream=True and load_data=False
         # This will run the entire pipeline from bronze to silver
-        dim_customer_etl = DimCustomerSilverETL(conn=mock_duckdb_connection, run_upstream=True, load_data=False)
+        # Update instantiation
+        dim_customer_etl = DimCustomerSilver(conn=mock_duckdb_connection, run_upstream=True, load_data=False)
         dim_customer_etl.run()
         dim_customer_dataset = dim_customer_etl.read()
         

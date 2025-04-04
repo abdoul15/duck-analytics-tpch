@@ -1,40 +1,41 @@
 import duckdb
-from analytics.etl.bronze.customer import CustomerBronzeETL
-from analytics.etl.silver.dim_customer import DimCustomerSilverETL
-from analytics.etl.silver.dim_part import DimPartSilverETL
-from analytics.etl.gold.finance_metrics import FinanceMetricsGoldETL
-from analytics.etl.gold.marketing_metrics import MarketingMetricsGoldETL
+from analytics.utils.logging_config import setup_logging
+from analytics.etl.bronze.customer import CustomerBronze
+from analytics.etl.silver.dim_customer import DimCustomerSilver
+from analytics.etl.silver.dim_part import DimPartSilver
+from analytics.etl.gold.finance_metrics import FinanceMetricsGold
+from analytics.etl.gold.marketing_metrics import MarketingMetricsGold
+from analytics.etl.bronze.orders import OrdersBronze
+import logging
 
 
 
 if __name__ == "__main__":
-    # 1. Connexion DuckDB avec plugins utiles
-    conn = duckdb.connect(database=":memory:")
-    conn.execute("INSTALL httpfs; LOAD httpfs;")
-    conn.execute("INSTALL postgres_scanner; LOAD postgres_scanner;")
+    # Configuration des logs
+    setup_logging()
+    logger = logging.getLogger(__name__)
+    logger.info("Démarrage du pipeline ETL")
 
-    # # 2. Lancer l'ETL
-    # etl = CustomerBronzeETL(conn=conn)
-    # etl.run()
+    try:
+        # 1. Connexion DuckDB avec plugins utiles
+        logger.debug("Connexion à DuckDB")
+        conn = duckdb.connect(database=":memory:")
+        conn.execute("INSTALL httpfs; LOAD httpfs;")
+        conn.execute("INSTALL postgres_scanner; LOAD postgres_scanner;")
 
-    # # Lire tout le répertoire S3
-    # dataset = etl.read()
+        logger.info("Exécution du ETL FinanceMetrics")
+        dim = FinanceMetricsGold(conn=conn, load_data=False)
+        dim.run()
+        dim_data = dim.read()
+        dim_data.curr_data.show()
 
-    # # Afficher les données
-    # dataset.curr_data.show()
+        logger.info("Exécution du ETL MarketingMetrics")
+        dim_m = MarketingMetricsGold(conn=conn,load_data=False)
+        dim_m.run()
+        dim_m_data=dim_m.read()
+        dim_m_data.curr_data.show()
 
-    dim = FinanceMetricsGoldETL(conn=conn)
-    dim.run()
-    dim_data = dim.read()
-
-    dim_data.curr_data.show()
-
-    dim_m = MarketingMetricsGoldETL(conn=conn)
-    dim_m.run()
-    dim_data_m = dim_m.read()
-
-    dim_data_m.curr_data.show()
-
-    
-
-    print("✅ ETL Execution terminé.")
+        logger.info("✅ ETL Execution terminé avec succès")
+    except Exception as e:
+        logger.error(f"Erreur lors de l'exécution du pipeline: {str(e)}")
+        raise

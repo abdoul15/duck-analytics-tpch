@@ -2,21 +2,21 @@ from datetime import date
 from typing import Dict, List, Optional, Type
 
 import duckdb
-from analytics.utils.etl_dataset import ETLDataSet 
-from analytics.utils.duck_etl_base import TableETL
-from analytics.etl.silver.fct_orders import FctOrdersSilverETL
-from analytics.etl.silver.dim_customer import DimCustomerSilverETL
-from analytics.etl.silver.dim_part import DimPartSilverETL
+from analytics.utils.etl_dataset import ETLDataSet
+from analytics.utils.duck_etl_base import Table
+from analytics.etl.silver.fct_orders import FctOrdersSilver
+from analytics.etl.silver.dim_customer import DimCustomerSilver
+from analytics.etl.silver.dim_part import DimPartSilver
 
 
-class WideOrderDetailsGoldETL(TableETL):
+class WideOrderDetailsGold(Table):
     def __init__(
         self,
         conn: duckdb.DuckDBPyConnection,
-        upstream_table_names: Optional[List[Type[TableETL]]] = [
-            FctOrdersSilverETL,
-            DimCustomerSilverETL,
-            DimPartSilverETL,
+        upstream_table_names: Optional[List[Type[Table]]] = [
+            FctOrdersSilver,
+            DimCustomerSilver,
+            DimPartSilver,
         ],
         name: str = 'wide_order_details',
         primary_keys: List[str] = ['order_key', 'line_number'],
@@ -42,8 +42,8 @@ class WideOrderDetailsGoldETL(TableETL):
 
     def extract_upstream(self) -> List[ETLDataSet]:
         upstream_datasets = []
-        for TableETLClass in self.upstream_table_names:
-            etl_instance = TableETLClass(
+        for TableClass in self.upstream_table_names:
+            etl_instance = TableClass(
                 conn=self.conn,
                 run_upstream=self.run_upstream,
                 load_data=self.load_data,
@@ -59,9 +59,10 @@ class WideOrderDetailsGoldETL(TableETL):
         parts = upstream_datasets[2].curr_data
 
         # Register views
-        orders.create_view("orders", replace=True)
-        customers.create_view("customers", replace=True)
-        parts.create_view("parts", replace=True)
+        orders.create_view("orders_data", replace=True)
+        customers.create_view("customers_data", replace=True)
+        parts.create_view("parts_data", replace=True)
+
 
         etl_date = date.today().isoformat()
 
@@ -90,9 +91,9 @@ class WideOrderDetailsGoldETL(TableETL):
             o.delivery_delay_days,
             o.is_late_delivery,
             '{etl_date}' AS etl_inserted
-        FROM orders o
-        LEFT JOIN customers c ON o.customer_key = c.customer_key
-        LEFT JOIN parts p ON o.part_key = p.part_key
+        FROM orders_data o
+        LEFT JOIN customers_data c ON o.customer_key = c.customer_key
+        LEFT JOIN parts_data p ON o.part_key = p.part_key
         """
 
         relation = self.conn.from_query(query)
