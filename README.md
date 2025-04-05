@@ -47,7 +47,7 @@ Ce projet implémente un **pipeline analytique complet** basé sur les données 
 1. Connectez-vous à la console AWS (https://aws.amazon.com/)
 2. Allez dans le service S3
 3. Cliquez sur "Créer un bucket"
-4. Donnez un nom unique à votre bucket (ex: `duckdb-tpch-analytics`)
+4. Donnez un nom unique à votre bucket
 5. Sélectionnez la région souhaitée (ex: `eu-west-1`)
 6. Configurez les options selon vos besoins (versionning, chiffrement, etc.)
 7. Cliquez sur "Créer un bucket"
@@ -83,13 +83,18 @@ S3_ACCESS_KEY=your-access-key
 S3_SECRET_KEY=your-secret-key
 S3_ENDPOINT=https://s3.amazonaws.com
 S3_REGION=eu-west-3
-S3_BUCKET=your-bucket-name
+S3_BUCKET=your-bucket-name  # Assurez-vous qu'il est existe
 ```
 
 ### 3. Exécution
 ```bash
 make up  # Démarrer les containers
 make run-pipeline  # Lancer le pipeline
+```
+### 4. Quelques commandes utiles
+```bash
+make rebuild  # Appliquer les mis à jour à l'environnement
+make down # Arrêter l'environnement
 ```
 
 ## Accès aux Données
