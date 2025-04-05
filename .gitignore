@@ -1,0 +1,6 @@
+.env
+.env.duckdb
+*.env
+notebooks/
+__pycache__/
+*.pyc
