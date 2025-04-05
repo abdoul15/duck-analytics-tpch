@@ -4,6 +4,31 @@
 
 Ce projet implémente un **pipeline analytique complet** basé sur les données **TPC-H**, utilisant **DuckDB** comme moteur de traitement et **AWS S3** comme stockage. L'objectif est de produire des métriques business exploitables dans des outils BI afin de prendre des décisions éclairées.
 
+## Métriques Calculées
+
+### FinanceMetrics (Gold Layer)
+- **Revenus totaux** par date/nation/région
+- **Taxes totales** collectées
+- **Remises totales** accordées
+- **Créances clients** (commandes non livrées)
+- **Nombre de commandes** et valeur moyenne
+- **Marge estimée** (calculée à 20% du prix étendu)
+- **Délai moyen** des commandes en cours
+
+### MarketingMetrics (Gold Layer)
+- **Revenus** par segment client/mois
+- **Panier moyen** par segment
+- **Taux de livraisons en retard**
+- **Marque la plus vendue** par segment
+- **Performance** par région/marché
+
+### WideOrderDetails (Gold Layer => One Big Table)
+- Table de faits détaillée avec :
+  - **Données clients** (segment, nation, région)
+  - **Données produits** (marque, type, fabricant)
+  - **Indicateurs de livraison** (retards)
+  - **Données financières** (montants, taxes, remises)
+
 ## Architecture du Pipeline
 
 ![Architecture du Pipeline](architecture-hop.png)
