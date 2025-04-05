@@ -24,14 +24,6 @@ duckdb-shell:
 run-pipeline:
 	docker exec -ti duckdb python /app/analytics/run_pipeline.py
 
-# Exécuter uniquement la couche Bronze avec DuckDB
-run-duckdb-bronze:
-	docker exec -ti duckdb ./entrypoint.sh pipeline bronze
-
-# Exécuter uniquement la couche Silver avec DuckDB
-run-duckdb-silver:
-	docker exec -ti duckdb ./entrypoint.sh pipeline silver
-
 # Exécuter une commande Python dans le conteneur DuckDB
 duckdb-python:
 	docker exec -ti duckdb python

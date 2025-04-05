@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from typing import Dict, List, Optional, Type
 
 import duckdb
@@ -15,8 +15,7 @@ class FinanceMetricsGold(Table):
             WideOrderDetailsGold
         ],
         name: str = 'finance_metrics',
-        primary_keys: List[str] = ['date', 'customer_nation', 'customer_region'],
-        storage_path: str = 's3://duckdb-bucket-tpch/gold/finance_metrics',
+        primary_keys: List[str] = ['dt', 'customer_nation', 'customer_region'],
         data_format: str = 'parquet',
         database: str = 'tpchdb',
         partition_keys: List[str] = ['etl_inserted'],
@@ -24,16 +23,16 @@ class FinanceMetricsGold(Table):
         load_data: bool = True,
     ) -> None:
         super().__init__(
-            conn,
-            upstream_table_names,
-            name,
-            primary_keys,
-            storage_path,
-            data_format,
-            database,
-            partition_keys,
-            run_upstream,
-            load_data,
+            conn=conn,
+            upstream_table_names=upstream_table_names,
+            layer='gold',
+            name=name,
+            primary_keys=primary_keys,
+            data_format=data_format,
+            database=database,
+            partition_keys=partition_keys,
+            run_upstream=run_upstream,
+            load_data=load_data,
         )
 
     def extract_upstream(self) -> List[ETLDataSet]:
@@ -53,11 +52,11 @@ class FinanceMetricsGold(Table):
         orders = upstream_datasets[0].curr_data
         orders.create_view("wide_orders", replace=True)
 
-        etl_date = date.today().isoformat()
+        etl_date = datetime.now().isoformat()
 
         query = f"""
         SELECT
-            CAST(order_date AS DATE) AS date,
+            CAST(order_date AS DATE) AS dt,
             customer_nation,
             customer_region,
 
@@ -79,7 +78,7 @@ class FinanceMetricsGold(Table):
             '{etl_date}' AS etl_inserted
 
         FROM wide_orders
-        GROUP BY date, customer_nation, customer_region
+        GROUP BY dt, customer_nation, customer_region
         """
 
         relation = self.conn.from_query(query)
@@ -107,20 +106,31 @@ class FinanceMetricsGold(Table):
                 partition_keys=self.partition_keys,
             )
 
-        base_path = self.storage_path.rstrip('/')
+        base_path = self.storage_path.rstrip("/")
 
         if partition_values:
+            # Lire partition spécifique
             partition_path = "/".join([f"{k}={v}" for k, v in partition_values.items()])
-            full_path = f"{base_path}/{partition_path}"
-            relation = self.conn.read_parquet(f"{full_path}/*.parquet", hive_partitioning=True)
+            full_path = f"{base_path}/{partition_path}/*.parquet"
+            relation = self.conn.read_parquet(full_path, hive_partitioning=True)
+
         else:
-            full_path = f"{base_path}/*"
-            all_data = self.conn.read_parquet(f"{full_path}/*.parquet", hive_partitioning=True)
-            all_data.create_view("finance_metrics_all", replace=True)
-            latest = self.conn.execute("SELECT max(etl_inserted) FROM finance_metrics_all").fetchone()[0]
-            relation = self.conn.from_query(
-                f"SELECT * FROM finance_metrics_all WHERE etl_inserted = '{latest}'"
-            )
+            # Lire la dernière partition dynamiquement sans créer une vue ou DF
+            latest_partition_query = f"""
+                SELECT max(etl_inserted) AS max_partition
+                FROM read_parquet('{base_path}/*/*.parquet', hive_partitioning=true)
+            """
+            latest_partition = self.conn.execute(latest_partition_query).fetchone()[0]
+
+            if latest_partition is None:
+                raise ValueError(f"Aucune partition trouvée dans {base_path}")
+
+            # Lire les données de la dernière partition
+            relation = self.conn.from_query(f"""
+                SELECT *
+                FROM read_parquet('{base_path}/*/*.parquet', hive_partitioning=true)
+                WHERE etl_inserted = '{latest_partition}'
+            """)
 
         return ETLDataSet(
             name=self.name,

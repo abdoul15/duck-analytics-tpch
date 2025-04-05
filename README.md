@@ -2,11 +2,11 @@
 
 ## Introduction
 
-Ce projet implémente un **pipeline analytique complet** basé sur les données **TPC-H**, utilisant **DuckDB** comme moteur de traitement et **AWS S3** comme stockage. L'objectif est de produire des métriques business exploitables dans des outils BI.
+Ce projet implémente un **pipeline analytique complet** basé sur les données **TPC-H**, utilisant **DuckDB** comme moteur de traitement et **AWS S3** comme stockage. L'objectif est de produire des métriques business exploitables dans des outils BI afin de prendre des décisions éclairées.
 
 ## Architecture du Pipeline
 
-![Architecture du Pipeline](docs/architecture.png)
+![Architecture du Pipeline](architecture-hop.png)
 
 ### 1. Ingestion (Bronze Layer)
 - Extraction depuis PostgreSQL via DuckDB
@@ -19,14 +19,16 @@ Ce projet implémente un **pipeline analytique complet** basé sur les données 
 - Stockage intermédiaire sur S3
 
 ### 3. Agrégation (Gold Layer)
-- Calcul des indicateurs clés:
+- Calcul des indicateurs clés (One Big table):
   - **Finance**: Revenus, marges, taxes
   - **Marketing**: Segmentation client
 - Export vers S3 pour consommation BI
 
 ### 4. Interface
-- Vues métier matérialisées
-- Compatible avec AWS Athena/Redshift
+- Création de vues métier spécifiques pour :
+  - Le département **Finance** (`analytics/etl/interface/finance_views.py`)
+  - Le département **Marketing** (`analytics/etl/interface/marketing_views.py`)
+- Ces métriques sontimmédiatement disponibles après l'exécution du pipeline, compatible avec des outils BI ou des requêtes directes (ex: AWS Athena/Redshift/QuickSight).
 
 ## Stack Technique
 
@@ -57,41 +59,31 @@ Ce projet implémente un **pipeline analytique complet** basé sur les données 
 3. Attachez la politique `AmazonS3FullAccess` (ou une politique plus restrictive)
 4. Notez les credentials (Access Key ID et Secret Access Key)
 
-### 3. Variables d'environnement
-```bash
-# AWS Configuration
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_REGION=eu-west-1
-S3_BUCKET=your-bucket-name
-S3_DATA_PATH=/analytics/tpch
-```
-
-### Initialisation DuckDB avec S3
-
-**Note de sécurité** :  
-Pour des environnements de production, utilisez des rôles IAM plutôt que des credentials statiques, et restreignez les permissions au minimum nécessaire.
-```python
-conn.execute("INSTALL httpfs; LOAD httpfs;")
-conn.execute(f"""
-    SET s3_region='{AWS_REGION}';
-    SET s3_access_key_id='{AWS_ACCESS_KEY_ID}';
-    SET s3_secret_access_key='{AWS_SECRET_ACCESS_KEY}';
-""")
-```
 
 ## Démarrage Rapide
 
 ### 1. Installation
 ```bash
-git clone https://github.com/votre-repo/duck-analytics-tpch.git
+git clone https://github.com/abdoul15/duck-analytics-tpch.git
 cd duck-analytics-tpch
 ```
 
-### 2. Configuration
+### 2. Configuration des credentials
+
+#### Fichier `.env` à créer dans le dossier `duck-analytics-tpch`
+
 ```bash
-cp .env.example .env
-# Remplir les credentials AWS
+# Configuration PostgreSQL
+POSTGRES_USER=tpchuser
+POSTGRES_PASSWORD=tpchpass
+POSTGRES_DB=tpchdb
+
+# Configuration S3
+S3_ACCESS_KEY=your-access-key
+S3_SECRET_KEY=your-secret-key
+S3_ENDPOINT=https://s3.amazonaws.com
+S3_REGION=eu-west-3
+S3_BUCKET=your-bucket-name
 ```
 
 ### 3. Exécution
@@ -107,14 +99,9 @@ make run-pipeline  # Lancer le pipeline
 - **Redshift Spectrum**: Créer des tables externes pointant vers S3
 - **QuickSight**: Connecteur S3 direct
 
-### Exemple de requête Athena
-```sql
-SELECT * FROM parquet_scan('s3://your-bucket/analytics/tpch/gold/finance_metrics/*')
-```
 
 ## Évolution
 
-- Intégration Glue Catalog
 - Orchestration Step Functions
 - Monitoring CloudWatch
 - Sécurité IAM fine

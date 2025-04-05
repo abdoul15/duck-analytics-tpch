@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Type
+from dotenv import load_dotenv # Importer load_dotenv
 
 import duckdb
 
@@ -19,11 +20,11 @@ class InValidDataException(Exception):
 class Table(ABC):
     def __init__(
         self,
-        duck_conn: duckdb.DuckDBPyConnection,
+        conn: duckdb.DuckDBPyConnection,
         upstream_table_names: Optional[List[Type[Table]]],
+        layer: str,
         name: str,
         primary_keys: List[str],
-        storage_path: str,
         data_format: str,
         database: str,
         partition_keys: List[str],
@@ -31,11 +32,16 @@ class Table(ABC):
         load_data: bool = True,
     ) -> None:
         self.logger = logging.getLogger(f"etl.{self.__class__.__name__}")
-        self.conn = duck_conn
+        self.conn = conn
         self.upstream_table_names = upstream_table_names
         self.name = name
         self.primary_keys = primary_keys
-        self.storage_path = storage_path
+        # Lire le bucket depuis l'env var
+        load_dotenv()
+        s3_bucket = os.getenv("S3_BUCKET")
+        if not s3_bucket:
+            raise ValueError("La variable d'environnement S3_BUCKET n'est pas définie.")
+        self.storage_path = f"s3://{s3_bucket}/{layer}/{name}"
         self.data_format = data_format
         self.database = database
         self.partition_keys = partition_keys

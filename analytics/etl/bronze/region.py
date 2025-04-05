@@ -14,7 +14,6 @@ class RegionBronze(Table):
         upstream_table_names: Optional[List[Type[Table]]] = None,
         name: str = 'region',
         primary_keys: List[str] = ['r_regionkey'],
-        storage_path: str = 's3://duckdb-bucket-tpch/bronze/region',
         data_format: str = 'parquet',
         database: str = 'tpchdb',
         partition_keys: List[str] = ['etl_inserted'],
@@ -22,16 +21,16 @@ class RegionBronze(Table):
         load_data: bool = True,
     ) -> None:
         super().__init__(
-            conn,
-            upstream_table_names,
-            name,
-            primary_keys,
-            storage_path,
-            data_format,
-            database,
-            partition_keys,
-            run_upstream,
-            load_data,
+            conn=conn,
+            upstream_table_names=upstream_table_names,
+            layer='bronze',
+            name=name,
+            primary_keys=primary_keys,
+            data_format=data_format,
+            database=database,
+            partition_keys=partition_keys,
+            run_upstream=run_upstream,
+            load_data=load_data,
         )
 
     def extract_upstream(self) -> List[ETLDataSet]:
@@ -90,32 +89,31 @@ class RegionBronze(Table):
                 partition_keys=self.partition_keys,
             )
 
-        base_path = self.storage_path.rstrip('/')
+        base_path = self.storage_path.rstrip("/")
 
         if partition_values:
+            # Lire partition spécifique
             partition_path = "/".join([f"{k}={v}" for k, v in partition_values.items()])
-            full_path = f"{base_path}/{partition_path}"
+            full_path = f"{base_path}/{partition_path}/*.parquet"
+            relation = self.conn.read_parquet(full_path, hive_partitioning=True)
+
         else:
-            full_path = f"{base_path}/*"
-            all_data = self.conn.read_parquet(f"{full_path}/*.parquet", hive_partitioning=True)
-            all_data.create_view("all_region_partitions", replace=True)
+            # Lire la dernière partition dynamiquement sans créer une vue ou DF
+            latest_partition_query = f"""
+                SELECT max(etl_inserted) AS max_partition
+                FROM read_parquet('{base_path}/*/*.parquet', hive_partitioning=true)
+            """
+            latest_partition = self.conn.execute(latest_partition_query).fetchone()[0]
 
-            latest = self.conn.execute("SELECT max(etl_inserted) FROM all_region_partitions").fetchone()[0]
-            filtered = self.conn.from_query(
-                f"SELECT * FROM all_region_partitions WHERE etl_inserted = '{latest}'"
-            )
+            if latest_partition is None:
+                raise ValueError(f"Aucune partition trouvée dans {base_path}")
 
-            return ETLDataSet(
-                name=self.name,
-                curr_data=filtered,
-                primary_keys=self.primary_keys,
-                storage_path=self.storage_path,
-                data_format=self.data_format,
-                database=self.database,
-                partition_keys=self.partition_keys,
-            )
-
-        relation = self.conn.read_parquet(f"{full_path}/*.parquet", hive_partitioning=True)
+            # Lire les données de la dernière partition
+            relation = self.conn.from_query(f"""
+                SELECT *
+                FROM read_parquet('{base_path}/*/*.parquet', hive_partitioning=true)
+                WHERE etl_inserted = '{latest_partition}'
+            """)
 
         return ETLDataSet(
             name=self.name,
