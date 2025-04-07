@@ -1,4 +1,4 @@
-# DuckDB TPC-H Analytics Pipeline with AWS S3
+Pipeline analytique DuckDB TPC-H avec AWS S3
 
 ## Introduction
 
