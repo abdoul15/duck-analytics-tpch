@@ -108,7 +108,7 @@ S3_ACCESS_KEY=your-access-key
 S3_SECRET_KEY=your-secret-key
 S3_ENDPOINT=https://s3.amazonaws.com
 S3_REGION=eu-west-3
-S3_BUCKET=your-bucket-name  # Assurez-vous qu'il est existe
+S3_BUCKET=your-bucket-name  # Assurez-vous qu'il existe
 ```
 
 ### 3. Exécution
