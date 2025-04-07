@@ -53,7 +53,7 @@ Ce projet implémente un **pipeline analytique complet** basé sur les données 
 - Création de vues métier spécifiques pour :
   - Le département **Finance** (`analytics/etl/interface/finance_views.py`)
   - Le département **Marketing** (`analytics/etl/interface/marketing_views.py`)
-- Ces métriques sontimmédiatement disponibles après l'exécution du pipeline, compatible avec des outils BI ou des requêtes directes (ex: AWS Athena/Redshift/QuickSight).
+- Ces métriques sont immédiatement disponibles après l'exécution du pipeline, compatible avec des outils BI ou des requêtes directes (ex: AWS Athena/Redshift/QuickSight).
 
 ## Stack Technique
 
